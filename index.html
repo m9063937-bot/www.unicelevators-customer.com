@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unic Elevators – Customer</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Barlow+Condensed:wght@900&display=swap" rel="stylesheet">
+<style>
+:root{--r:#9B1111;--g:#F0A500;--n:#060d1f;--n2:#0d1628;--tx:#f0f4ff;--t2:#a8b4cf;--br:rgba(255,255,255,0.08);--blue:#4285F4;--green:#22c55e}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--n);color:var(--tx);font-family:'Plus Jakarta Sans',sans-serif;overflow-x:hidden}
+.screen{display:none;padding:20px;min-height:100vh}.screen.active{display:block}
+header{padding:15px 20px;background:rgba(6,13,31,0.95);border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(8px)}
+.btn-back{background:var(--n2);border:1px solid var(--br);color:var(--tx);padding:8px 12px;border-radius:8px;font-size:13px;cursor:pointer}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;color:var(--g);letter-spacing:1px}
+.card{background:var(--n2);border:1px solid var(--br);border-radius:16px;padding:20px;margin-bottom:15px}
+.btn-main{width:100%;padding:16px;border-radius:12px;border:none;font-weight:700;cursor:pointer;margin-bottom:12px;font-size:16px;transition:.2s}
+.btn-primary{background:var(--r);color:white}.btn-outline{background:var(--n2);color:var(--tx);border:1px solid var(--br)}
+input,textarea,select{width:100%;padding:12px;background:var(--n);border:1px solid var(--br);border-radius:8px;color:white;margin-bottom:15px;font-size:16px;font-family:inherit}
+label{font-size:12px;color:var(--t2);display:block;margin-bottom:4px}
+.badge{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:bold;text-transform:uppercase}
+.st-pending{background:rgba(255,255,255,0.1);color:white}.st-assigned{background:rgba(66,133,244,0.2);color:var(--blue)}
+.st-reached{background:rgba(240,165,0,0.2);color:var(--g)}.st-completed{background:rgba(34,197,94,0.2);color:var(--green)}
+#loader{position:fixed;inset:0;background:rgba(6,13,31,0.9);display:none;align-items:center;justify-content:center;z-index:2000;flex-direction:column}
+.spinner{width:40px;height:40px;border:4px solid var(--g);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gps-msg{font-size:11px;text-align:center;margin-bottom:15px;font-weight:600;padding:5px;border-radius:4px}
+.gps-err{background:rgba(155,17,17,0.1);color:#ff6b6b}.gps-ok{background:rgba(34,197,94,0.1);color:var(--green)}
+.err-box{color:#ff6b6b;font-size:13px;margin-bottom:10px;display:none;padding:8px;background:rgba(155,17,17,0.1);border-radius:8px}
+input.invalid{border-color:#ff6b6b}
+</style>
+</head>
+<body>
+
+<!-- ── LOADER ── -->
+<div id="loader">
+  <div class="spinner"></div>
+  <p id="loader-msg" style="margin-top:14px;font-size:13px;color:var(--t2)">SAVING...</p>
+</div>
+
+<!-- ── HEADER ── -->
+<header id="main-header" style="display:none">
+  <button class="btn-back" onclick="navBack()">← BACK</button>
+  <span class="logo">UNIC ELEVATORS</span>
+  <span style="width:60px"></span>
+</header>
+
+<!-- ── SCREEN: LANGUAGE ── -->
+<div class="screen active" id="scr-lang" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh">
+  <div style="font-size:60px;margin-bottom:16px">🛗</div>
+  <div class="logo" style="font-size:28px;margin-bottom:6px">UNIC ELEVATORS</div>
+  <p style="color:var(--t2);margin-bottom:40px;font-size:14px">Customer Portal</p>
+  <p style="color:var(--t2);font-size:13px;margin-bottom:20px">Choose Language / భాష ఎంచుకోండి</p>
+  <button class="btn-main btn-primary" style="max-width:300px" onclick="setLang('en')">🇬🇧 ENGLISH</button>
+  <button class="btn-main btn-outline" style="max-width:300px" onclick="setLang('te')">🇮🇳 తెలుగు</button>
+</div>
+
+<!-- ── SCREEN: CUSTOMER MENU ── -->
+<div class="screen" id="scr-customer-menu">
+  <div style="text-align:center;padding:30px 0 20px">
+    <div style="font-size:40px">👋</div>
+    <h2 id="txt-custMenu" style="margin-top:10px">Customer Portal</h2>
+    <p style="color:var(--t2);font-size:13px;margin-top:6px" id="txt-custSub">How can we help you today?</p>
+  </div>
+  <button class="btn-main btn-primary" onclick="gotoScreen('scr-form-select')">📋 <span id="txt-fileComplaint">File a Complaint</span></button>
+  <button class="btn-main btn-outline" onclick="gotoScreen('scr-track')">🔍 <span id="txt-trackComplaint">Track My Complaint</span></button>
+</div>
+
+<!-- ── SCREEN: SERVICE TYPE ── -->
+<div class="screen" id="scr-form-select">
+  <div class="card" style="text-align:center;margin-bottom:20px">
+    <h2 id="txt-selectService">Service Selection</h2>
+    <p style="color:var(--t2);font-size:13px;margin-top:6px" id="txt-selectSub">Select the type of service you need</p>
+  </div>
+  <button class="btn-main btn-outline" onclick="openForm('installation')">🏗️ <span id="txt-installation">New Lift Installation</span></button>
+  <button class="btn-main btn-outline" onclick="openForm('service')">🔧 <span id="txt-service">Monthly Service Request</span></button>
+  <button class="btn-main" style="background:#fee2e2;color:#991b1b;border:2px solid #f87171" onclick="openForm('emergency')">⚠️ <span id="txt-emergency">EMERGENCY (Lift Stuck)</span></button>
+</div>
+
+<!-- ── SCREEN: DETAILS FORM ── -->
+<div class="screen" id="scr-details-form">
+  <div class="card" style="margin-bottom:20px">
+    <h2 id="txt-detailsTitle">Details</h2>
+    <p style="color:var(--t2);font-size:13px;margin-top:6px" id="txt-detailsSub">Fill in your details below</p>
+    <div style="margin-top:10px;padding:8px 12px;background:rgba(240,165,0,0.1);border-radius:8px;font-size:12px;color:var(--g)">
+      <span id="disp-type-name"></span>
+    </div>
+  </div>
+
+  <div id="submit-err" class="err-box"></div>
+
+  <label id="lbl-name">Full Name *</label>
+  <input id="inp-name" type="text" autocomplete="name" maxlength="80" oninput="clearFieldErr(this)">
+
+  <label id="lbl-phone">Mobile Number *</label>
+  <!-- FIX: type="tel" for mobile keyboard; pattern for 10-digit Indian numbers -->
+  <input id="inp-phone" type="tel" autocomplete="tel" maxlength="15" placeholder="10-digit number" oninput="clearFieldErr(this)">
+
+  <label id="lbl-addr">Address</label>
+  <textarea id="inp-addr" rows="2" maxlength="200"></textarea>
+
+  <label id="lbl-issue">Remarks / Issue</label>
+  <textarea id="inp-issue" rows="3" maxlength="500"></textarea>
+
+  <button class="btn-main btn-outline" id="btn-loc" onclick="getLocation()">📍 <span id="txt-shareLocation">Share My Location (GPS)</span></button>
+  <div id="loc-status" class="gps-msg" style="display:none"></div>
+
+  <button class="btn-main btn-primary" onclick="submitTicket()">✅ <span id="txt-submit">Submit Request</span></button>
+</div>
+
+<!-- ── SCREEN: SUCCESS ── -->
+<div class="screen" id="scr-success" style="text-align:center;padding-top:60px">
+  <div style="font-size:60px">🎉</div>
+  <h2 style="margin:16px 0 8px">REQUEST REGISTERED!</h2>
+  <p style="color:var(--t2);font-size:13px;margin-bottom:24px">YOUR TRACKING ID</p>
+  <div style="background:var(--n2);border:2px solid var(--g);border-radius:16px;padding:24px;margin-bottom:20px;display:inline-block;min-width:200px">
+    <div id="new-id" style="font-size:40px;font-weight:900;font-family:'Barlow Condensed',sans-serif;color:var(--g);letter-spacing:4px">00000</div>
+  </div>
+  <p style="font-size:12px;color:var(--t2);margin-bottom:8px">📸 Screenshot this ID to track your complaint later</p>
+  <p style="font-size:12px;color:var(--t2);margin-bottom:30px">☁️ Saved to cloud — our team will contact you shortly.</p>
+  <button class="btn-main btn-primary" onclick="goHome()">🏠 Back to Home</button>
+</div>
+
+<!-- ── SCREEN: TRACK ── -->
+<div class="screen" id="scr-track">
+  <div class="card" style="margin-bottom:20px">
+    <h2 id="txt-trackTitle">Track Progress</h2>
+    <p style="color:var(--t2);font-size:13px;margin-top:6px">Enter your ticket ID or mobile number</p>
+  </div>
+  <!-- FIX: was missing input type, no placeholder -->
+  <input id="inp-track-val" type="text" placeholder="e.g. 45123 or 9876543210" maxlength="20">
+  <button class="btn-main btn-primary" onclick="trackTicket()">🔍 <span id="txt-trackNow">Track Now</span></button>
+  <div id="track-result"></div>
+</div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+// ── FIREBASE INIT ──
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyA8Ge3WFWVJiLEoNJnmlStgThzA70eixAU",
+    authDomain: "unic-elevators-2c01c.firebaseapp.com",
+    databaseURL: "https://unic-elevators-2c01c-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "unic-elevators-2c01c",
+    storageBucket: "unic-elevators-2c01c.firebasestorage.app",
+    messagingSenderId: "1002807153207",
+    appId: "1:1002807153207:web:a697e2ed1faa95d71165b2"
+  });
+}
+var db = firebase.database().ref("tickets");
+
+// ── STATE ──
+var LANG = 'en';
+var HISTORY = ['scr-lang'];
+var COORDS = null;
+var ACTIVE_TYPE = 'service';
+
+// ── TRANSLATIONS ──
+// FIX: Added full translations for all UI strings, not just custMenu
+var T = {
+  en: {
+    custMenu: "Customer Portal",
+    custSub: "How can we help you today?",
+    fileComplaint: "File a Complaint",
+    trackComplaint: "Track My Complaint",
+    selectService: "Service Selection",
+    selectSub: "Select the type of service you need",
+    installation: "New Lift Installation",
+    service: "Monthly Service Request",
+    emergency: "EMERGENCY (Lift Stuck)",
+    detailsTitle: "Details",
+    detailsSub: "Fill in your details below",
+    lblName: "Full Name *",
+    lblPhone: "Mobile Number *",
+    lblAddr: "Address",
+    lblIssue: "Remarks / Issue",
+    shareLocation: "Share My Location (GPS)",
+    submit: "Submit Request",
+    trackTitle: "Track Progress",
+    trackNow: "Track Now",
+    errRequired: "❌ Name and Phone are required.",
+    errPhone: "❌ Enter a valid 10-digit mobile number.",
+    errSave: "❌ Save Failed. Please try again."
+  },
+  te: {
+    custMenu: "కస్టమర్ పోర్టల్",
+    custSub: "మీకు ఎలా సహాయపడగలం?",
+    fileComplaint: "ఫిర్యాదు నమోదు చేయండి",
+    trackComplaint: "నా ఫిర్యాదు ట్రాక్ చేయండి",
+    selectService: "సేవ ఎంపిక",
+    selectSub: "మీకు కావలసిన సేవ రకాన్ని ఎంచుకోండి",
+    installation: "కొత్త లిఫ్ట్ ఇన్‌స్టాలేషన్",
+    service: "నెలవారీ సర్వీస్ అభ్యర్థన",
+    emergency: "అత్యవసరం (లిఫ్ట్ ఆగిపోయింది)",
+    detailsTitle: "వివరాలు",
+    detailsSub: "దయచేసి మీ వివరాలు నమోదు చేయండి",
+    lblName: "పూర్తి పేరు *",
+    lblPhone: "మొబైల్ నంబర్ *",
+    lblAddr: "చిరునామా",
+    lblIssue: "వ్యాఖ్యలు / సమస్య",
+    shareLocation: "నా లొకేషన్ షేర్ చేయండి (GPS)",
+    submit: "అభ్యర్థన సమర్పించండి",
+    trackTitle: "పురోగతి ట్రాక్ చేయండి",
+    trackNow: "ఇప్పుడు ట్రాక్ చేయండి",
+    errRequired: "❌ పేరు మరియు ఫోన్ అవసరం.",
+    errPhone: "❌ చెల్లుబాటు అయ్యే 10-అంకెల మొబైల్ నంబర్ నమోదు చేయండి.",
+    errSave: "❌ సేవ్ విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్నించండి."
+  }
+};
+
+// ── APPLY LANGUAGE TO ALL ELEMENTS ──
+// FIX: Was only updating custMenu — now updates ALL translated strings
+function applyLang(l) {
+  var ids = ['custMenu','custSub','fileComplaint','trackComplaint','selectService','selectSub',
+    'installation','service','emergency','detailsTitle','detailsSub','lblName','lblPhone',
+    'lblAddr','lblIssue','shareLocation','submit','trackTitle','trackNow'];
+  ids.forEach(function(k) {
+    var el = document.getElementById('txt-' + k) || document.getElementById('lbl-' + k.toLowerCase().replace('lbl',''));
+    // use a more targeted approach
+  });
+  // Direct targeted updates
+  var d = T[l];
+  setText('txt-custMenu', d.custMenu);
+  setText('txt-custSub', d.custSub);
+  setText('txt-fileComplaint', d.fileComplaint);
+  setText('txt-trackComplaint', d.trackComplaint);
+  setText('txt-selectService', d.selectService);
+  setText('txt-selectSub', d.selectSub);
+  setText('txt-installation', d.installation);
+  setText('txt-service', d.service);
+  setText('txt-emergency', d.emergency);
+  setText('txt-detailsTitle', d.detailsTitle);
+  setText('txt-detailsSub', d.detailsSub);
+  setText('lbl-name', d.lblName);
+  setText('lbl-phone', d.lblPhone);
+  setText('lbl-addr', d.lblAddr);
+  setText('lbl-issue', d.lblIssue);
+  setText('txt-shareLocation', d.shareLocation);
+  setText('txt-submit', d.submit);
+  setText('txt-trackTitle', d.trackTitle);
+  setText('txt-trackNow', d.trackNow);
+}
+
+function setText(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.innerText = val;
+}
+
+function setLang(l) {
+  LANG = l;
+  applyLang(l);
+  gotoScreen('scr-customer-menu');
+}
+
+// ── NAVIGATION ──
+function gotoScreen(id) {
+  HISTORY.push(id);
+  showScreen(id);
+}
+
+function navBack() {
+  if (HISTORY.length > 1) {
+    HISTORY.pop();
+    showScreen(HISTORY[HISTORY.length - 1]);
+  }
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  document.getElementById('main-header').style.display = (id === 'scr-lang') ? 'none' : 'flex';
+  window.scrollTo(0, 0);
+}
+
+function goHome() {
+  HISTORY = ['scr-lang'];
+  showScreen('scr-customer-menu');
+  HISTORY.push('scr-customer-menu');
+}
+
+// ── FORM ──
+function openForm(type) {
+  ACTIVE_TYPE = type;
+  var names = {
+    installation: '🏗 ' + T[LANG].installation,
+    service: '🔧 ' + T[LANG].service,
+    emergency: '⚠️ ' + T[LANG].emergency
+  };
+  document.getElementById('disp-type-name').innerText = names[type] || type;
+  document.getElementById('submit-err').style.display = 'none';
+  // FIX: Clear form on open so previous entries don't leak through
+  clearInputs();
+  gotoScreen('scr-details-form');
+}
+
+// ── GPS ──
+function getLocation() {
+  var s = document.getElementById('loc-status');
+  s.style.display = 'block';
+  s.className = 'gps-msg';
+  s.innerText = '📡 ACCESSING GPS...';
+  if (!navigator.geolocation) {
+    s.innerText = 'GPS not supported on this device.';
+    s.className = 'gps-msg gps-err';
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      COORDS = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      s.innerText = '✓ Location Captured (' + COORDS.lat.toFixed(4) + ', ' + COORDS.lng.toFixed(4) + ')';
+      s.className = 'gps-msg gps-ok';
+      document.getElementById('btn-loc').style.borderColor = 'var(--green)';
+    },
+    function(err) {
+      // FIX: Show specific error reason
+      var msgs = { 1: 'Permission denied. Enable location in browser settings.', 2: 'GPS signal unavailable.', 3: 'GPS timed out. Try again.' };
+      s.innerText = '⚠️ ' + (msgs[err.code] || 'GPS Error — retry.');
+      s.className = 'gps-msg gps-err';
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+// ── INPUT VALIDATION HELPERS ──
+function clearFieldErr(el) {
+  el.classList.remove('invalid');
+}
+
+// FIX: Proper phone validation (10-digit Indian mobile)
+function isValidPhone(p) {
+  return /^[6-9]\d{9}$/.test(p.replace(/\s|-/g, ''));
+}
+
+// FIX: Sanitize user input before injecting into innerHTML to prevent XSS
+function escapeHTML(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// ── SUBMIT ──
+function submitTicket() {
+  var errBox = document.getElementById('submit-err');
+  errBox.style.display = 'none';
+
+  var nameEl = document.getElementById('inp-name');
+  var phoneEl = document.getElementById('inp-phone');
+  var n = nameEl.value.trim();
+  var p = phoneEl.value.trim();
+
+  // FIX: Validate name AND phone format, not just existence
+  var hasErr = false;
+  if (!n) { nameEl.classList.add('invalid'); hasErr = true; }
+  if (!p) { phoneEl.classList.add('invalid'); hasErr = true; }
+  if (hasErr) {
+    errBox.style.display = 'block';
+    errBox.innerText = T[LANG].errRequired;
+    return;
+  }
+  if (!isValidPhone(p)) {
+    phoneEl.classList.add('invalid');
+    errBox.style.display = 'block';
+    errBox.innerText = T[LANG].errPhone;
+    return;
+  }
+
+  toggleLoader(true, 'SAVING TO CLOUD...');
+
+  // FIX: Generate ID using timestamp + random to drastically reduce collision chance
+  // Old: Math.floor(10000 + Math.random() * 90000) — 90,000 possible IDs, collisions likely
+  var id = Date.now().toString().slice(-5) + Math.floor(10 + Math.random() * 90);
+
+  db.push({
+    id: id,
+    name: n,
+    phone: p,
+    type: ACTIVE_TYPE,
+    addr: document.getElementById('inp-addr').value.trim(),
+    issue: document.getElementById('inp-issue').value.trim(),
+    status: 'pending',
+    lat: COORDS ? COORDS.lat : null,
+    lng: COORDS ? COORDS.lng : null,
+    created: Date.now()
+  }).then(function() {
+    document.getElementById('new-id').innerText = id;
+    clearInputs();
+    toggleLoader(false);
+    gotoScreen('scr-success');
+  }).catch(function(e) {
+    toggleLoader(false);
+    errBox.style.display = 'block';
+    // FIX: Don't expose raw Firebase error messages to users
+    errBox.innerText = T[LANG].errSave;
+    console.error('Firebase error:', e);
+  });
+}
+
+// ── TRACK ──
+function trackTicket() {
+  var val = document.getElementById('inp-track-val').value.trim();
+  var res = document.getElementById('track-result');
+
+  if (!val) {
+    res.innerHTML = '<div class="card" style="color:#ff6b6b">Enter a ticket ID or phone number.</div>';
+    return;
+  }
+
+  // FIX: Show loading state while fetching
+  res.innerHTML = '<div class="card" style="text-align:center;color:var(--t2)">🔍 Searching...</div>';
+
+  db.once("value", function(snap) {
+    var found = [];
+    snap.forEach(function(child) {
+      var t = child.val();
+      // FIX: Exact match on ID; contains match on phone — prevents partial ID false matches
+      if (t.id === val || (t.phone && t.phone.replace(/\s/g,'') === val.replace(/\s/g,''))) {
+        found.push(t);
+      }
+    });
+
+    if (!found.length) {
+      // FIX: Sanitize user input before echoing back into HTML
+      res.innerHTML = '<div class="card" style="text-align:center;color:var(--t2)">No ticket found for <b>"' + escapeHTML(val) + '"</b>.</div>';
+      return;
+    }
+
+    found.sort(function(a, b) { return b.created - a.created; });
+
+    var sc = { pending:'rgba(255,255,255,0.3)', assigned:'var(--blue)', reached:'var(--g)', completed:'var(--green)' };
+
+    // FIX: All user data sanitized with escapeHTML before innerHTML injection
+    res.innerHTML = found.map(function(t) {
+      var mapLink = (t.lat && t.lng)
+        ? '<a href="https://maps.google.com/?q=' + encodeURIComponent(t.lat) + ',' + encodeURIComponent(t.lng) + '" target="_blank" rel="noopener noreferrer" style="color:var(--blue);font-size:11px">📍 Open in Maps</a>'
+        : '';
+      return '<div class="card" style="border-left:3px solid ' + (sc[t.status]||'var(--br)') + '">'
+        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'
+        + '<span style="font-size:11px;color:var(--t2)">Ticket ID: <b style="color:var(--g)">#' + escapeHTML(t.id) + '</b></span>'
+        + '<span class="badge st-' + escapeHTML(t.status) + '">' + escapeHTML((t.status||'').toUpperCase()) + '</span>'
+        + '</div>'
+        + '<div style="font-weight:700;font-size:15px">' + escapeHTML(t.name) + '</div>'
+        + '<div style="font-size:12px;color:var(--t2);margin:4px 0">' + escapeHTML(t.phone) + '</div>'
+        + (t.addr ? '<div style="font-size:11px;color:var(--t2)">' + escapeHTML(t.addr) + '</div>' : '')
+        + (t.issue ? '<div style="font-size:11px;color:var(--t2);font-style:italic;margin-top:4px">"' + escapeHTML(t.issue) + '"</div>' : '')
+        + (t.assignedTo ? '<div style="font-size:11px;color:var(--t2);margin-top:6px">👷 Technician: <b style="color:white">' + escapeHTML(t.assignedTo) + '</b></div>' : '')
+        + (mapLink ? '<div style="margin-top:8px">' + mapLink + '</div>' : '')
+        + '<div style="font-size:10px;color:var(--t2);margin-top:8px">' + new Date(t.created).toLocaleString() + '</div>'
+        + '</div>';
+    }).join('');
+  }).catch(function(e) {
+    res.innerHTML = '<div class="card" style="color:#ff6b6b">Failed to fetch. Check your connection.</div>';
+    console.error('Track error:', e);
+  });
+}
+
+// ── HELPERS ──
+function toggleLoader(show, msg) {
+  document.getElementById('loader').style.display = show ? 'flex' : 'none';
+  if (msg) document.getElementById('loader-msg').innerText = msg;
+}
+
+function clearInputs() {
+  ['inp-name','inp-phone','inp-addr','inp-issue'].forEach(function(id) {
+    var e = document.getElementById(id);
+    if (e) { e.value = ''; e.classList.remove('invalid'); }
+  });
+  COORDS = null;
+  var s = document.getElementById('loc-status');
+  if (s) s.style.display = 'none';
+  var b = document.getElementById('btn-loc');
+  if (b) b.style.borderColor = '';
+}
+</script>
+</body>
+</html>
